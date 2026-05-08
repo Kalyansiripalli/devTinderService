@@ -27,12 +27,13 @@ requestRouter.post(
 
       const count = await UserModel.countDocuments({ _id: { $in: ids } });
       if (!(count === ids.length))
-        return res.status(400).json({ message: "user not found" });
+        return res.status(400).json({ message: "invalid user" });
 
       if (fromUserId.toString() === toUserId)
         return res
           .status(400)
           .send("you cant send connection request to yourself");
+
       const requestAlreadyExist = await ConnectionRequestModel.findOne({
         $or: [
           { fromUserId, toUserId },
@@ -49,8 +50,18 @@ requestRouter.post(
         toUserId,
         status,
       });
-      await requestInfo.save();
-      return res.status(200).json({ message: "request sent " });
+      const data = await requestInfo.save();
+      await data.populate("fromUserId", "_id firstName lastName");
+      await data.populate("toUserId", "_id firstName lastName");
+      return res.status(200).json({
+        message: "request sent ",
+        data: {
+          _id: data._id,
+          fromUser: data.fromUserId,
+          toUser: data.toUserId,
+          status: data.status,
+        },
+      });
     } catch (error) {
       res.status(500).send(error.message);
     }
@@ -58,7 +69,7 @@ requestRouter.post(
 );
 
 requestRouter.post(
-  "/request/respond/:status/:requestId",
+  "/request/review/:status/:requestId",
   validateJwtToken,
   async (req, res, next) => {
     try {
@@ -66,26 +77,28 @@ requestRouter.post(
       const requestId = req.params.requestId;
       const status = req.params.status;
       // status, accessTokenId, requestId must exist to process the api
-      if (!accessTokenId || ! requestId || !status)
+      if (!accessTokenId || !requestId || !status)
         return res
           .status(400)
           .json({ message: "Insufficent Data to process the request" });
+
       // status can be either ["accepted", "rejected"]
       const allowedStatus = ["accepted", "rejected"];
       if (!allowedStatus.includes(status))
         return res
           .status(400)
-          .json("status must me one of accepted, rejected ");
-
-      // accessTokenId should be an valid userId - check this (Usermodel)
-      const savedToUserData = await UserModel.findOne({ _id: accessTokenId });
-      if (!savedToUserData)
-        return res.status(400).json({ message: "invalid user" });
+          .json("status must be one of accepted, rejected ");
 
       // requestId must be valid - check this (ConnectionRequestModel)
       // only toUser of the reqest can respond
       // touser can only respond once -> ie, status not in ["accepted", "rejected"]
       // cant respond to ingrored requests
+      console.log({
+        _id: requestId,
+        toUserId: accessTokenId,
+        status: "interested",
+      });
+
       const savedRequestInfo = await ConnectionRequestModel.findOne({
         _id: requestId,
         toUserId: accessTokenId,
@@ -93,11 +106,23 @@ requestRouter.post(
       });
 
       if (!savedRequestInfo)
-        return res.status(400).json({ message: "request not found" });
+        return res
+          .status(400)
+          .json({ message: "connection request not found" });
 
       savedRequestInfo.status = status;
-      await savedRequestInfo.save();
-      res.status(200).send("responded successfully");
+      const data = await savedRequestInfo.save();
+      await data.populate("toUserId", "_id firstName lastName");
+      await data.populate("fromUserId", "_id firstName lastName");
+      res.status(200).json({
+        message: `connection request ${status}`,
+        data: {
+          _id: data._id,
+          fromUser: data.fromUserId,
+          toUser: data.toUserId,
+          status: data.status,
+        },
+      });
     } catch (error) {
       res.status(500).json({ message: error.message });
     }
