@@ -4,7 +4,8 @@ const { authRouter } = require("./routes/auth");
 const { profileRouter } = require("./routes/profile");
 const cookieParser = require("cookie-parser");
 const { requestRouter } = require("./routes/request");
-const { userRoutes } = require("./routes/user");
+const { userRouter } = require("./routes/user");
+const { feedRouter } = require("./routes/feed");
 
 const app = express();
 app.use(express.json());
@@ -12,8 +13,8 @@ app.use(cookieParser());
 app.use("/", authRouter);
 app.use("/", profileRouter);
 app.use("/", requestRouter);
-app.use("/", userRoutes);
-
+app.use("/", userRouter);
+app.use("/", feedRouter);
 dbConnect()
   .then(() => {
     console.log("DB connection established successfully ✅");

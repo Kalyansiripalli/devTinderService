@@ -1,9 +1,9 @@
 const express = require("express");
 const { validateJwtToken } = require("../middlewares/validateJwtToken");
 const { ConnectionRequestModel } = require("../models/connectionRequest");
-const userRoutes = express.Router();
+const userRouter = express.Router();
 
-userRoutes.get(
+userRouter.get(
   "/user/requests/received",
   validateJwtToken,
   async (req, res) => {
@@ -34,7 +34,7 @@ userRoutes.get(
   },
 );
 
-userRoutes.get("/user/connections", validateJwtToken, async (req, res) => {
+userRouter.get("/user/connections", validateJwtToken, async (req, res) => {
   try {
     const { loggedInUser } = req;
     const toUserId = loggedInUser._id;
@@ -71,4 +71,4 @@ userRoutes.get("/user/connections", validateJwtToken, async (req, res) => {
   }
 });
 
-module.exports = { userRoutes };
+module.exports = { userRouter };
