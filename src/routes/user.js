@@ -4,7 +4,7 @@ const { ConnectionRequestModel } = require("../models/connectionRequest");
 const userRouter = express.Router();
 
 userRouter.get(
-  "/user/requests/received",
+  "/user/requests/pending",
   validateJwtToken,
   async (req, res) => {
     // toUserId -> from access token
@@ -25,8 +25,11 @@ userRouter.get(
           "_id firstName lastName age gender photoUrl about skills",
         );
       if (!pendingRequests.length)
-        return res.status(400).json({ message: "No requests found" });
-      const data = pendingRequests.map((obj) => obj.fromUserId);
+        return res.status(200).json({ data: [], message: "No requests found" });
+      const data = pendingRequests.map((obj) => ({
+        requestId: obj._id,
+        ...obj.fromUserId.toJSON(),
+      }));
       res.status(200).json({ data });
     } catch (error) {
       res.status(500).send(error.message);

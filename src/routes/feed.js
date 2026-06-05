@@ -8,18 +8,13 @@ const feedRouter = express();
 feedRouter.get("/feed", validateJwtToken, async (req, res) => {
   try {
     // correct set of users
-    const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
 
     const { loggedInUser } = req;
 
     const requests = await ConnectionRequestModel.find({
       $or: [{ fromUserId: loggedInUser._id }, { toUserId: loggedInUser._id }],
-    })
-      .skip(skip)
-      .limit(limit)
-      .sort({ createdAt: -1 });
+    });
 
     const hiddenUsers = new Set();
 
@@ -32,9 +27,11 @@ feedRouter.get("/feed", validateJwtToken, async (req, res) => {
 
     const allUsers = await UserModel.find({
       _id: { $nin: [...hiddenUsers] },
-    }).select("_id firstName lastName age gender photoUrl about skills");
+    })
+      .select("_id firstName lastName age gender photoUrl about skills")
+      .limit(limit);
 
-    res.status(200).json({ data: allUsers });
+    res.status(200).json(allUsers);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

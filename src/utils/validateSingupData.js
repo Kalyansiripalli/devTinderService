@@ -16,8 +16,6 @@ const validateSingupData = (req, res, next) => {
       about,
       skills,
     } = userInfo;
-    // check for any required conditions
-    console.log("hii");
 
     if (!isEmail(emailId)) throw new Error("Invalid email");
     if (!isStrongPassword(password))
@@ -32,7 +30,7 @@ const validateSingupData = (req, res, next) => {
 
     next();
   } catch (error) {
-    res.status(400).send("signup failed: " + error.message);
+    res.status(400).json({ message: "signup failed: " + error.message });
   }
 };
 

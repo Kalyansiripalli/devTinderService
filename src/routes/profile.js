@@ -14,9 +14,9 @@ profileRouter.get("/profile/view", validateJwtToken, async (req, res, next) => {
       "_id firstName lastName emailId age gender photoUrl about skills",
     );
 
-    res.status(200).json({ data: document });
+    res.status(200).json(document);
   } catch (error) {
-    res.status(400).send(error.message);
+    res.status(400).json({ message: error.message });
   }
 });
 
@@ -51,7 +51,8 @@ profileRouter.patch(
         data: updatedUserInfo,
       });
     } catch (error) {
-      res.status(400).send(error.message);
+      console.error("Profile Edit Error:", error);
+      res.status(400).json({ message: "Invalid Edit Request." });
     }
   },
 );
@@ -86,7 +87,8 @@ profileRouter.patch(
         res.status(200).json({ message: "Password updated successfully" });
       }
     } catch (error) {
-      res.status(400).send(error.message);
+      console.error("Password Edit Error:", error);
+      res.status(400).json({ message: error.message });
     }
   },
 );

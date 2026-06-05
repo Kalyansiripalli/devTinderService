@@ -93,12 +93,6 @@ requestRouter.post(
       // only toUser of the reqest can respond
       // touser can only respond once -> ie, status not in ["accepted", "rejected"]
       // cant respond to ingrored requests
-      console.log({
-        _id: requestId,
-        toUserId: accessTokenId,
-        status: "interested",
-      });
-
       const savedRequestInfo = await ConnectionRequestModel.findOne({
         _id: requestId,
         toUserId: accessTokenId,

@@ -7,6 +7,7 @@ const validateProfileEditData = (req) => {
     "photoUrl",
     "about",
     "skills",
+    "About"
   ];
 
   const notAllowedFields = Object.keys(req.body).filter(

@@ -14,11 +14,13 @@ authRouter.post("/signup", validateSingupData, async (req, res) => {
     userInfo.password = hashedPassword;
     const savedUser = await userInfo.save();
     const token = await generateJwtToken(savedUser);
-    res.cookie("accessToken", token).status(201).json({
-      message: "user added successfully",
-    });
+    
+    const userData = savedUser.toObject();
+    delete userData.password;
+
+    res.cookie("accessToken", token).status(201).json(userData);
   } catch (error) {
-    res.status(400).send("user not added " + error.message);
+    res.status(400).json({ message: error.message });
   }
 });
 
@@ -27,14 +29,17 @@ authRouter.post("/login", async (req, res) => {
   const userPassword = req.body.password;
   const savedUserDetails = await UserModel.findOne({ emailId });
 
-  if (!savedUserDetails) return res.status(400).send("invalid credentials");
+  if (!savedUserDetails) return res.status(400).json({ message: "invalid credentials" });
   const validCredentials = await bcrypt.compare(
     userPassword,
     savedUserDetails.password,
   );
-  if (!validCredentials) return res.status(400).send("invalid credentials");
+  if (!validCredentials) return res.status(400).json({ message: "invalid credentials" });
   const token = await generateJwtToken(savedUserDetails);
-  res.cookie("accessToken", token).status(200).send("Login successful");
+  const userData = savedUserDetails.toObject();
+  delete userData.password;
+
+  res.cookie("accessToken", token).status(200).json(userData);
 });
 
 authRouter.post("/logout", async (req, res) => {
@@ -43,7 +48,7 @@ authRouter.post("/logout", async (req, res) => {
       expires: new Date(Date.now()),
     })
     .status(200)
-    .send("Logout successful");
+    .json({ message: "Logout successful" });
 });
 
 module.exports = { authRouter };
